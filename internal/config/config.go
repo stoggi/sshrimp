@@ -176,18 +176,6 @@ func validateAlias(val interface{}) error {
 	return nil
 }
 
-func validateRegions(val interface{}) error {
-	if regions, ok := val.([]string); ok {
-		if len(regions) < 1 {
-			return errors.New("need at least one region")
-		}
-	} else {
-		return fmt.Errorf("expected type []string got %v", reflect.TypeOf(val).Name())
-	}
-
-	return nil
-}
-
 func certificateAuthorityQuestions(config *SSHrimp) []*survey.Question {
 	defaultAccountID := ""
 	if config.CertificateAuthority.AccountID > 0 {
@@ -217,10 +205,7 @@ func certificateAuthorityQuestions(config *SSHrimp) []*survey.Question {
 				Options:  supportedAwsRegions,
 				PageSize: 10,
 			},
-			Validate: survey.ComposeValidators(
-				survey.Required,
-				validateRegions,
-			),
+			Validate: survey.Required,
 		},
 		{
 			Name: "FunctionName",
