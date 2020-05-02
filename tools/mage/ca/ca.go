@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,6 +43,15 @@ func Build() error {
 	return sh.RunWith(env, "go", "build", "./cmd/sshrimp-ca")
 }
 
+// Build Builds the GCP certificate authority
+// It produces gcp.a for checking timestamps
+func BuildGCP() error {
+	env := map[string]string{
+		"GOOS": "linux",
+	}
+	return sh.RunWith(env, "go", "build", "-o", "gcp.a", "./gcp")
+}
+
 // Package Packages the certificate authority files into a zip archive
 func Package() error {
 	if modified, err := target.Path("sshrimp-ca", config.GetPath()); err == nil && !modified {
@@ -57,6 +67,33 @@ func Package() error {
 	defer zipFile.Close()
 
 	if err := lambdaCreateArchive(zipFile, "sshrimp-ca", config.GetPath()); err != nil {
+		return err
+	}
+	return nil
+}
+
+// PackageGCP Packages the certificate authority files into a zip archive
+func PackageGCP() error {
+	if modified, err := target.Path("gcp.a", config.GetPath()); err == nil && !modified {
+		return nil
+	}
+
+	mg.Deps(BuildGCP, Config)
+
+	zipFile, err := os.Create("sshrimp-ca-gcp.zip")
+	if err != nil {
+		return err
+	}
+	defer zipFile.Close()
+
+	err = gcpCreateArchive(zipFile, []ZipFiles{
+		ZipFiles{Filename: "go.mod"},
+		{"gcp/gcp.go", "gcp.go"},
+		ZipFiles{Filename: "internal"},
+		ZipFiles{config.GetPath(), filepath.Base(config.GetPath())},
+	}...)
+
+	if err != nil {
 		return err
 	}
 	return nil
@@ -137,6 +174,12 @@ func Clean() error {
 		return err
 	}
 	if err := sh.Rm("sshrimp-ca.zip"); err != nil {
+		return err
+	}
+	if err := sh.Rm("sshrimp-ca-gcp.zip"); err != nil {
+		return err
+	}
+	if err := sh.Rm("gcp.a"); err != nil {
 		return err
 	}
 	return nil

@@ -26,6 +26,7 @@ type Agent struct {
 
 // CertificateAuthority config for the sshrimp-ca lambda
 type CertificateAuthority struct {
+	Project            string
 	AccountID          int
 	Regions            []string
 	FunctionName       string
@@ -46,7 +47,7 @@ type SSHrimp struct {
 }
 
 // List of supported regions for the config wizard
-var supportedAwsRegions = []string{
+var SupportedAwsRegions = []string{
 	"ap-east-1",
 	"ap-northeast-1",
 	"ap-northeast-2",
@@ -65,6 +66,17 @@ var supportedAwsRegions = []string{
 	"us-east-2",
 	"us-west-1",
 	"us-west-2",
+}
+
+var SupportedGcpRegions = []string{
+	"europe-west1",
+	"europe-west2",
+	"europe-west3",
+	"us-central1",
+	"us-east1",
+	"us-east4",
+	"asia-northeast1",
+	"asia-east2",
 }
 
 var supportedExtensions = []string{
@@ -202,7 +214,7 @@ func certificateAuthorityQuestions(config *SSHrimp) []*survey.Question {
 				Message:  "AWS Region:",
 				Default:  config.CertificateAuthority.Regions,
 				Help:     "Select multiple regions for high availability. Each region gets it's own Lambda function and KMS key.",
-				Options:  supportedAwsRegions,
+				Options:  SupportedAwsRegions,
 				PageSize: 10,
 			},
 			Validate: survey.Required,
