@@ -13,25 +13,25 @@ import (
 )
 
 // KMSSigner an AWS asymetric crypto signer
-type KMSSigner struct {
+type AWSSigner struct {
 	crypto.Signer
 	client kmsiface.KMSAPI
 	key    string
 }
 
-// NewKMSSigner return a new instsance of KMSSigner
-func NewKMSSigner(key string) *KMSSigner {
+// NewKMSSigner return a new instsance of AWSSigner
+func NewAWSSigner(key string) *AWSSigner {
 
 	sess := session.Must(session.NewSession())
 
-	return &KMSSigner{
+	return &AWSSigner{
 		key:    key,
 		client: kms.New(sess),
 	}
 }
 
 // Public returns the public key from KMS
-func (s *KMSSigner) Public() crypto.PublicKey {
+func (s *AWSSigner) Public() crypto.PublicKey {
 
 	response, err := s.client.GetPublicKey(&kms.GetPublicKeyInput{
 		KeyId: &s.key,
@@ -51,7 +51,7 @@ func (s *KMSSigner) Public() crypto.PublicKey {
 }
 
 // Sign a digest with the private key in KMS
-func (s *KMSSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
+func (s *AWSSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 
 	response, err := s.client.Sign(&kms.SignInput{
 		KeyId:            &s.key,
